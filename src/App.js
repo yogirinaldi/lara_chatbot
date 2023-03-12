@@ -1,25 +1,39 @@
-import logo from './logo.svg';
 import './App.css';
+import React from 'react';
+import Home from './components/home/home';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+  // const [message, setMessage] = useState('');
+  // const [response, setResponse] = useState('');
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     const res = await fetch('http://localhost:5000', {
+  //       method: 'POST',
+  //       mode: 'cors',
+  //       body: JSON.stringify({message}),
+  //       headers: {'Content-Type': 'application/json', 'access-control-allow-origin':'http://localhost:3000'},
+  //     });
+  //     const data = await res.json();
+  //     setResponse(data.message);
+  //     console.log(data.message);
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
+
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   fetch('http://localhost:3001',{
+  //     method: 'POST',
+  //     header
+  //   })
+  //   console.log("ASsa");
+  // };
+
+  return (<Home />);
 }
 
 export default App;
+

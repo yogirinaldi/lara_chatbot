@@ -1,0 +1,4 @@
+.blockquote-footer:before {
+    content: none;
+}
+
