@@ -66,11 +66,10 @@ function Home() {
                                 <div className="col offset-lg-1">
                                     <figure className="text-center">
                                         <blockquote className="blockquote">
-                                            <p>MIKA</p>
+                                            <p>LARA</p>
                                         </blockquote>
                                         <p className="blockquote-footer">
-                                            Halo, Saya MIKA, asisten pribadimu. saya siap membantu memberikan informasi mengenai akses jadwal kuliah dan ujian.
-                                            absensi, kalender dan peraturan akademik. informasi wisuda dan lainnya.
+                                            Halo, Saya LARA (Legal Advisory and Resource Assistant), konsultan pribadimu. Saya siap membantu memberikan informasi mengenai perkawinan, hak asuh anak, harta gono-gini dan lainnya.
                                         </p>
                                     </figure>                                    
                                 </div>

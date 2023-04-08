@@ -1,13 +1,8 @@
-from embedding_api import df, document_embeddings,answer_query_with_context
 from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS, cross_origin
 import pymysql
+import embedding_api as ea
 
-
-# query = "tahun berapa mikroskil berdiri?"
-# answer = answer_query_with_context(query, df, document_embeddings)
-
-# print(f"\nQ: {query}\nA: {answer}")
 
 app = Flask(__name__)
 CORS(app)
@@ -20,13 +15,15 @@ def handle_post_request():
     # ...
     #
     query = data['inputValue']
-    answer = answer_query_with_context(query, df, document_embeddings)
+    answer = ea.answer_query_with_context(query, ea.df, ea.document_embeddings)
 
+    ea.conversation.append({"Q":query,"A":answer})
+    #print(ea.conversation)
     response = jsonify({'message': answer})
     #response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
-    
 
     return response
 
 if __name__ == '__main__':
     app.run(debug=True)
+

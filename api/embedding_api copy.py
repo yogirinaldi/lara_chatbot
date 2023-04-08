@@ -4,8 +4,6 @@ import numpy as np
 import pickle
 import tiktoken
 from datetime import date
-from tokenizer import tokenize, num_tokens_from_string
-from concat import concat
 
 
 
@@ -15,15 +13,13 @@ openai.api_key = OPENAI_API_KEY
 
 COMPLETIONS_MODEL = "text-davinci-003"
 EMBEDDING_MODEL = "text-embedding-ada-002"
-conversation = []
-
-
 
 
 ##Tokenize the dataset and create the new csv with new column "tokens"
 #tokenize_dataset('dataset.csv')
 
-
+df = pd.read_csv('dataset_tokens.csv',encoding='cp1252')
+df = df.set_index(["title", "heading"])
 ##print(f"{len(df)} rows in the data.")
 
 
@@ -79,20 +75,8 @@ def load_embeddings(fname: str) -> dict[tuple[str, str], list[float]]:
            (r.title, r.heading): [r[str(i)] for i in range(max_dim + 1)] for _, r in df.iterrows()
     }
 
-df = pd.read_csv('dataset_tokens.csv',encoding='cp1252')
-df = df.set_index(["title", "heading"])
 
-update = False
-
-if update:
-        concat()
-        tokenize()
-        df = pd.read_csv('dataset_tokens.csv',encoding='cp1252')
-        df = df.set_index(["title", "heading"])
-        new_df = compute_doc_embeddings(df)
-        new_df.to_csv('dataset_tokens_embeddings.csv', index=False)
-else:
-    document_embeddings = load_embeddings("dataset_tokens_embeddings.csv")
+document_embeddings = load_embeddings("dataset_tokens_embeddings.csv")
 
 ##===== OR, uncomment the below line to recalculate the embeddings from scratch. after that comment again========
 
@@ -130,9 +114,9 @@ def order_document_sections_by_query_similarity(query: str, contexts: dict[(str,
     return document_similarities
 
 
-#print(order_document_sections_by_query_similarity("bolehkah memiliki 2 istri", document_embeddings)[:5])
+#print(order_document_sections_by_query_similarity("tahun berdiri mikroskil", document_embeddings)[:5])
 
-MAX_SECTION_LEN = 750
+MAX_SECTION_LEN = 500
 SEPARATOR = "\n* "
 ENCODING = "cl100k_base"  # encoding for text-embedding-ada-002
 
@@ -163,8 +147,6 @@ for english, indonesian in indonesian_months.items():
     formatted_date = formatted_date.replace(english, indonesian)
 
 
-
-
 def construct_prompt(question: str, context_embeddings: dict, df: pd.DataFrame) -> str:
     """
     Fetch relevant 
@@ -174,10 +156,9 @@ def construct_prompt(question: str, context_embeddings: dict, df: pd.DataFrame) 
     chosen_sections = []
     chosen_sections_len = 0
     chosen_sections_indexes = []
-    
-    
+     
     for _, section_index in most_relevant_document_sections:
-        # Add contexts until we run out of space. 
+        # Add contexts until we run out of space.        
         document_section = df.loc[section_index].iloc[0]
         
         chosen_sections_len += document_section.tokens + separator_len
@@ -185,70 +166,24 @@ def construct_prompt(question: str, context_embeddings: dict, df: pd.DataFrame) 
             break
             
         chosen_sections.append(SEPARATOR + document_section.content.replace("\n", " "))
-        #chosen_sections.append(SEPARATOR + document_section.content)
         chosen_sections_indexes.append(str(section_index))
             
     ## Useful diagnostic information
-    #print(most_relevant_document_sections)
-    # print(f"Selected {len(chosen_sections)} document sections:")
-    # print("\n".join(chosen_sections_indexes))
-    
+    print(f"Selected {len(chosen_sections)} document sections:")
+    print("\n".join(chosen_sections_indexes))
     
     #Jawab pertanyaan secara jujur hanya dengan menggunakan konteks yang disediakan, dan jika jawabannya tidak terdapat dalam teks atau konteks di bawah , katakan "Maaf, Saya tidak mengetahui terkait informasi tersebut.".
 
-    header = """Anda adalah konsultan hukum yang ramah, sangat membantu, sopan dan memberikan solusi. Tanggal hari ini adalah """ + formatted_date +""".
-    Patuhi instruksi dibawah ini:
-    1. Tanyakan kembali rincian masalah jika belum mengerti.
-    2. Hanya menjawab pertanyaan menggunakan Konteks yang diberikan. Jika diluar Konteks, katakan bahwa informasi tersebut belum tersedia.
-    3. Berpikirlah langkah demi langkah untuk memberikan solusi.
-    4. berikan jawaban dengan cara yang jelas dan mudah dimengerti oleh pengguna yang tidak ahli dalam bidang hukum.
-    5. hindari penggunaan bahasa hukum yang terlalu teknis atau rumit dan gunakan istilah yang lebih mudah dipahami oleh orang awam.
-    6. Gunakan kalimat yang singkat dan jelas, serta hindari pengulangan atau redundansi yang tidak perlu.
-    7. Balas salam dengan ramah.
+    header = """Tanggal hari ini adalah """ + formatted_date +""". Patuhi instruksi dibawah ini:
+    1. Hanya jawab pertanyaan yang berhubungan dengan layanan akademik mikroskil!
+    2. Hanya jawab pertanyaan yang menggunakan Konteks di bawah!
 
-    Konteks:
-    """
-    prompt = ""
-    if len(conversation) == 0:
-        prompt = header + "".join(chosen_sections) + "\n\nQ:" + question + "\nA:"
-    else:
-        new_conversation = cut_conversation(conversation, question, 4097 - num_tokens_from_string(header + "".join(chosen_sections) + "\n\n",COMPLETIONS_MODEL))
-        questions = ""
-        for i in new_conversation:
-            questions+= "Q:"+i["Q"] + "\nA:"+i["A"]+ "\n"
-
-        questions+="Q:"+question+ "\nA:"
-
-        prompt = header + "".join(chosen_sections) + "\n\n" + questions
-
-    return prompt
-
-
-def cut_conversation(conversation, new_question, max_size):
-    questions = ""
-    for i in conversation:
-        questions += "Q:" + i["Q"] + "\nA:" + i["A"] + "\n"
-    questions += "Q:" + new_question + "\nA:"
-
-    prompt_size = num_tokens_from_string(questions, COMPLETIONS_MODEL) + 500
-    while prompt_size > max_size and len(conversation) > 0:
-        conversation.pop(0)
-        questions = ""
-        for i in conversation:
-            questions += "Q:" + i["Q"] + "\nA:" + i["A"] + "\n"
-        questions += "Q:" + new_question + "\nA:"
-        prompt_size = num_tokens_from_string(questions, COMPLETIONS_MODEL) + 500
-
-    return conversation
-# prompt = construct_prompt(
-#     "bolehkah memiliki 2 istri",
-#     document_embeddings,
-#     df
-# )
-# print("===\n", prompt)
+    Konteks:"""
+    
+    return header + "".join(chosen_sections) + "\n\nQ: " + question + "\nA:"
 
 # prompt = construct_prompt(
-#     "Perkawinan dilarang antara dua orang yang:",
+#     "jadwal kuliah",
 #     document_embeddings,
 #     df
 # )
@@ -261,14 +196,6 @@ COMPLETIONS_API_PARAMS = {
     "model": COMPLETIONS_MODEL,
     "stop":["\n"]
 }
-
-# COMPLETIONS_API_PARAMS = {
-#     # We use temperature of 0.0 because it gives the most predictable, factual answer.
-#     "temperature": 0,
-#     "max_tokens": 500,
-#     "model": COMPLETIONS_MODEL
-# }
-
 
 def answer_query_with_context(
     query: str,
@@ -289,15 +216,10 @@ def answer_query_with_context(
                 prompt=prompt,
                 **COMPLETIONS_API_PARAMS
             )
-    
-    
 
     return response["choices"][0]["text"].strip(" \n")
-    #return response["usage"]
 
-
-# conversation.append({"Q":query,"A":response["choices"][0]["text"].strip(" \n")})
-# query = "Perkawinan dilarang antara dua orang yang:"
+# query = "jadwal kuliah"
 # answer = answer_query_with_context(query, df, document_embeddings)
 
 # print(f"\nQ: {query}\nA: {answer}")
