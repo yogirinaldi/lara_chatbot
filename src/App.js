@@ -1,6 +1,10 @@
 import './App.css';
 import React from 'react';
-import Home from './components/home/home';
+import Header from './components/Header';
+import WelcomeSection from './components/WelcomeSection';
+import Main from './components/Main';
+import Chatbot from './pages/chatbot/chatbot';
+import Footer from './components/Footer';
 
 function App() {
   // const [message, setMessage] = useState('');
@@ -32,7 +36,14 @@ function App() {
   //   console.log("ASsa");
   // };
 
-  return (<Home />);
+  return (
+    <>
+    <Header />
+    <WelcomeSection />
+    <Main/>
+    <Footer/>
+    </>
+  );
 }
 
 export default App;

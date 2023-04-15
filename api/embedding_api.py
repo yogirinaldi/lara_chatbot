@@ -8,8 +8,6 @@ from tokenizer import tokenize, num_tokens_from_string
 from concat import concat
 
 
-
-
 from api_key import OPENAI_API_KEY
 openai.api_key = OPENAI_API_KEY
 
@@ -129,8 +127,19 @@ def order_document_sections_by_query_similarity(query: str, contexts: dict[(str,
     
     return document_similarities
 
+# query1 = get_embedding("saya suka pantai")
+# query2 = get_embedding(" ")
 
-#print(order_document_sections_by_query_similarity("bolehkah memiliki 2 istri", document_embeddings)[:5])
+# dot_product = vector_similarity(query1,query2)
+
+# magnitude1 = np.linalg.norm(query1)
+# magnitude2 = np.linalg.norm(query2)
+
+# similarity = dot_product / (magnitude1 * magnitude2)
+
+# print(dot_product, similarity)
+
+#print(order_document_sections_by_query_similarity(" kucing", document_embeddings)[:5])
 
 MAX_SECTION_LEN = 750
 SEPARATOR = "\n* "
@@ -198,13 +207,12 @@ def construct_prompt(question: str, context_embeddings: dict, df: pd.DataFrame) 
 
     header = """Anda adalah konsultan hukum yang ramah, sangat membantu, sopan dan memberikan solusi. Tanggal hari ini adalah """ + formatted_date +""".
     Patuhi instruksi dibawah ini:
-    1. Tanyakan kembali rincian masalah jika belum mengerti.
-    2. Hanya menjawab pertanyaan menggunakan Konteks yang diberikan. Jika diluar Konteks, katakan bahwa informasi tersebut belum tersedia.
-    3. Berpikirlah langkah demi langkah untuk memberikan solusi.
+    1. tanyakan kembali rincian masalah jika belum mengerti.
+    2. hanya menjawab pertanyaan menggunakan informasi yang diberikan. jika diluar Konteks, katakan bahwa informasi tersebut belum tersedia.
+    3. berpikirlah langkah demi langkah untuk memberikan solusi.
     4. berikan jawaban dengan cara yang jelas dan mudah dimengerti oleh pengguna yang tidak ahli dalam bidang hukum.
     5. hindari penggunaan bahasa hukum yang terlalu teknis atau rumit dan gunakan istilah yang lebih mudah dipahami oleh orang awam.
-    6. Gunakan kalimat yang singkat dan jelas, serta hindari pengulangan atau redundansi yang tidak perlu.
-    7. Balas salam dengan ramah.
+    6. gunakan kalimat yang singkat dan jelas, serta hindari pengulangan atau redundansi yang tidak perlu.
 
     Konteks:
     """
@@ -296,8 +304,8 @@ def answer_query_with_context(
     #return response["usage"]
 
 
-# conversation.append({"Q":query,"A":response["choices"][0]["text"].strip(" \n")})
-# query = "Perkawinan dilarang antara dua orang yang:"
+
+# query = "Perkawinan dilarang antara dua orang yang:. tampilkan dalam list"
 # answer = answer_query_with_context(query, df, document_embeddings)
 
 # print(f"\nQ: {query}\nA: {answer}")

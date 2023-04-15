@@ -144,6 +144,7 @@ body {
 .chat .chat-history .bot-message {
   background: #efefef;
   max-width: calc(100% - 10px);
+  white-space: pre-line;
 }
 
 .chat .chat-history .bot-message:after {

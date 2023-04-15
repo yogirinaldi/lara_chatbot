@@ -8,6 +8,8 @@ def num_tokens_from_string(string: str, encoding_name: str) -> int:
     num_tokens = len(encoding.encode(string))
     return num_tokens
 
+#print(num_tokens_from_string("Your text string goes here", "text-embedding-ada-002"))
+
 # Open the CSV file for reading
 def tokenize():
     with open('dataset/concatenated_dataset.csv','r',encoding="cp1252") as file:
