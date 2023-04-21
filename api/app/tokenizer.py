@@ -21,6 +21,7 @@ def tokenize():
             
         # Add a new header "tokens" to the header row
         header.append("tokens")
+
             
         # Open a new CSV file for writing
         with open('dataset_tokens.csv', 'w', newline='') as file_tokens:
