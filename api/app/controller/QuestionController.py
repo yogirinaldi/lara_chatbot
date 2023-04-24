@@ -1,5 +1,5 @@
 from app.model.question import Question
-from app import response, app, db
+from app import response, app, db, embedding_api as ea
 from flask import request, jsonify
 import math
 
@@ -37,13 +37,20 @@ def save():
     try:
         data = request.get_json()
         question = data['question']
-        answer = data['answer']
+        ip_address = data['ip_address']
 
-        questions = Question(question=question,answer=answer)
+        answer = ea.answer_query_with_context(question, ea.df, ea.document_embeddings)
+        questions = Question(question=question,answer=answer,ip_address=ip_address)
+
+        ea.conversation.append({"Q":question,"A":answer})
 
         db.session.add(questions)
         db.session.commit()
-        return response.succeed(True,"BERHASIL MENAMBAH")
+        return response.succeed({
+            'id':questions.id,
+            'question':question,
+            'answer':answer
+            },"BERHASIL MENAMBAH")
     except Exception as e:
         print(e)
 

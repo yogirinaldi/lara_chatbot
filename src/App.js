@@ -1,10 +1,9 @@
-import './App.css';
-import React from 'react';
-import Header from './components/Header';
-import WelcomeSection from './components/WelcomeSection';
-import Main from './components/Main';
-import Chatbot from './pages/chatbot/chatbot';
-import Footer from './components/Footer';
+import "./App.css";
+import React from "react";
+import Header from "./components/Header";
+import WelcomeSection from "./components/WelcomeSection";
+import Main from "./components/Main";
+import Footer from "./components/Footer";
 
 function App() {
   // const [message, setMessage] = useState('');
@@ -37,14 +36,13 @@ function App() {
   // };
 
   return (
-    <>
-    <Header />
-    <WelcomeSection />
-    <Main/>
-    <Footer/>
-    </>
+    <div className="app">
+      <Header />
+      <WelcomeSection />
+      <Main />
+      <Footer />
+    </div>
   );
 }
 
 export default App;
-

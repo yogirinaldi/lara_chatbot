@@ -1,7 +1,6 @@
 import openai
 import pandas as pd
 import numpy as np
-import pickle
 import tiktoken
 from datetime import date
 from app.tokenizer import tokenize, num_tokens_from_string

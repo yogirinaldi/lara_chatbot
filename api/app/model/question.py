@@ -12,6 +12,7 @@ class Question(db.Model):
     answer = db.Column(db.Text,nullable=False)
     feedback = db.Column(db.Boolean,nullable=True)
     date = db.Column(db.DateTime,default=datetime.now(jakarta_timezone))
+    ip_address = db.Column(db.String(15), index=True, nullable=False)
 
     def __repr__(self):
         return '<Question {}>'.format(self.name)

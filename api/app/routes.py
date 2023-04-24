@@ -1,5 +1,5 @@
 from app import app, response, embedding_api as ea
-from app.controller import UserController, QuestionController
+from app.controller import UserController, QuestionController, LocationController
 from flask import request,jsonify,make_response
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
@@ -67,3 +67,10 @@ def chat():
     #response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
 
     return response
+
+@app.route('/location', methods=['GET','POST'])
+def location():
+    if request.method == 'GET':
+        return LocationController.index()
+    elif request.method == 'POST':
+        return LocationController.save()

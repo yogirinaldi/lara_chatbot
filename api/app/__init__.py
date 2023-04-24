@@ -15,5 +15,5 @@ jwt = JWTManager(app)
 CORS(app)
 
 
-from app.model import user, question
+from app.model import user, question, location
 from app import routes
