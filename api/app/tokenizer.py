@@ -8,7 +8,7 @@ def num_tokens_from_string(string: str, encoding_name: str) -> int:
     num_tokens = len(encoding.encode(string))
     return num_tokens
 
-#print(num_tokens_from_string("Your text string goes here", "text-embedding-ada-002"))
+#print(num_tokens_from_string("Your text string goes here ku turuk asdas sadsadkij pada mu negeri", "text-embedding-ada-002"))
 
 # Open the CSV file for reading
 def tokenize():

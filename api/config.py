@@ -12,4 +12,8 @@ class Config(object):
     
     SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://'+ USERNAME + ':' + PASSWORD + '@' + HOST + '/' + DATABASE
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_RECORD_QUERIES = True
+    #SQLALCHEMY_RECORD_QUERIES = True
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True, 
+        "pool_recycle": 19,
+    }

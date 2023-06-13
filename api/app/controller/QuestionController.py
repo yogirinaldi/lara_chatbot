@@ -1,7 +1,12 @@
 from app.model.question import Question
+from app.model.user import User
 from app import response, app, db, embedding_api as ea
-from flask import request, jsonify
+from flask import request, jsonify, session, Response
 import math
+from datetime import datetime
+
+import openai
+openai.api_key = "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"
 
 def index():
     try:
@@ -24,11 +29,12 @@ def formatArray(datas):
 
 def singleObject(data):
     data = {
-        'id': data.id,
-        'question': data.question,
-        'answer':data.answer,
+        'id_question': data.id_question,
+        'id_user':data.id_user,
+        'pertanyaan': data.pertanyaan,
+        'jawaban':data.jawaban,
         'feedback':data.feedback,
-        'date':data.date
+        'tanggal':data.tanggal.strftime("%Y-%m-%d %H:%M:%S.%f")
     }
 
     return data
@@ -36,25 +42,51 @@ def singleObject(data):
 def save():
     try:
         data = request.get_json()
-        question = data['question']
-        ip_address = data['ip_address']
+        pertanyaan = data['pertanyaan']
+        id_user =  data['id_user']
+    
+        if "userData" not in session:
+            user = User.query.filter_by(id_user=id_user).first()
+            data = {
+                'id_user': id_user,
+                'nama': user.nama,
+                'email':user.email,
+                'usia':user.usia,
+                'jk':user.jk
+            }
+            session["userData"] = data
+            
 
-        answer = ea.answer_query_with_context(question, ea.df, ea.document_embeddings)
-        questions = Question(question=question,answer=answer,ip_address=ip_address)
-
-        ea.conversation.append({"Q":question,"A":answer})
+        jawaban = ea.answer_query_with_context(pertanyaan, ea.df, ea.document_embeddings)
+        questions = Question(id_user=id_user,pertanyaan=pertanyaan,jawaban=jawaban,tanggal=datetime.now())
+          
 
         db.session.add(questions)
         db.session.commit()
+        
+        
         return response.succeed({
-            'id':questions.id,
-            'question':question,
-            'answer':answer
+            'id_question':1,
+            'pertanyaan':pertanyaan,
+            'jawaban':jawaban
             },"BERHASIL MENAMBAH")
     except Exception as e:
         print(e)
+    finally:
+        db.session.close()
 
-def update(question_id):
+def detail(id_question):
+    try:
+        question = Question.query.filter_by(id_question=id_question).first()
+        if not question:
+            response.badRequest([],"KOSONG")
+
+        data = singleObject(question)
+        return response.succeed(data,"success")
+    except Exception as e:
+        print(e)
+
+def update(id_question):
     try:
         data = request.get_json()
         feedback = data['feedback']
@@ -65,13 +97,86 @@ def update(question_id):
             }
         ]
 
-        question = Question.query.filter_by(id=question_id).first()
+        question = Question.query.filter_by(id_question=id_question).first()
         question.feedback = feedback
 
         db.session.commit()
         return response.succeed(input,"BERHASIL UPDATE")
     except Exception as e:
         print(e)
+    finally:
+        db.session.close()
+
+
+def stream_question():
+    try:
+        data = request.get_json()
+        pertanyaan = data['inputValue']
+        id_user = data['id_user']
+
+        questions = Question(id_user=id_user, pertanyaan=pertanyaan, jawaban="", tanggal=datetime.now())
+        db.session.add(questions)
+        db.session.flush()
+        
+
+        # if "userData" not in session:
+        #     user = User.query.filter_by(id_user=1).first()
+        #     data = {
+        #         'id_user': user.id_user,
+        #         'nama': user.nama,
+        #         'email':user.email,
+        #         'usia':user.usia,
+        #         'jk':user.jk
+        #         }
+        #     session["userData"] = data
+                
+
+        #prompt = ea.construct_prompt(inputValue,ea.document_embeddings,ea.df)
+
+        def generate_events():
+            response = openai.Completion.create(
+                model='text-davinci-003',
+                prompt=pertanyaan,
+                max_tokens=10,
+                temperature=0,
+                stream=True,  # this time, we set stream=True
+            )    
+            completion_text = ''
+            # iterate through the stream of events
+            yield f"{questions.id_question} "
+            count_yield = 1
+            for event in response:
+                event_text = event['choices'][0]['text']  # extract the text
+                completion_text += event_text  # append the text
+                if count_yield <= 2:
+                    count_yield += 1
+                else:
+                    yield event_text  # print the delay and text
+
+            print(f"Full text received:\n{completion_text}") 
+            db.session.commit()
+
+        # return Response(generate_events(), mimetype='text/event-stream')
+        return Response(generate_events(), mimetype='text/event-stream')
+    except Exception as e:
+        print(e)
+    finally:
+        db.session.close()
+
+def update_jawaban():
+    try:
+        data = request.get_json()
+        id_user = data['id_user']
+        pertanyaan = data['pertanyaan']
+        jawaban = data['jawaban']
+
+        questions = Question(id_user=id_user, pertanyaan=pertanyaan, jawaban=jawaban, tanggal=datetime.now())
+        db.session.add(questions)
+        db.session.commit()
+        return response.succeed(True,"BERHASIL UPDATE")
+    except Exception as e:
+        print(e)
+
 
 
 #pagination

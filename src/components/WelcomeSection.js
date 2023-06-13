@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
-import "../assets/vendor/bootstrap/css/bootstrap.min.css";
-import "../assets/css/main.css";
-import "../assets/css/variables.css";
+// import "../assets/vendor/bootstrap/css/bootstrap.min.css";
+// import "../assets/css/main.css";
+// import "../assets/css/variables.css";
 
 import "../assets/js/main.js";
 
@@ -26,9 +26,11 @@ const WelcomeSection = () => {
         <h2 className="text-center">
           Selamat Datang di <span>LARA</span>
         </h2>
-        <p>Sebuah Chatbot Konsultasi Hukum.</p>
+        <p style={{ textAlign: "center" }}>
+          Sebuah Chatbot Konsultasi Hukum Perkawinan.
+        </p>
         <div className="d-flex">
-          <a href="#about" className="btn-get-started scrollto">
+          <a href="#chat" className="btn-get-started scrollto">
             Mulai
           </a>
         </div>

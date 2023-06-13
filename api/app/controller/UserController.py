@@ -1,10 +1,10 @@
 from app.model.user import User
 from app import response, app, db
-from flask import request
-from flask_jwt_extended import create_access_token, create_refresh_token
-import datetime
+from flask import request, session
+from datetime import datetime
 
 def index():
+    
     try:
         user = User.query.all()
         data = formatArray(user)
@@ -22,67 +22,47 @@ def formatArray(datas):
 
 def singleObject(data):
     data = {
-        'id': data.id,
-        'name': data.name,
+        'id_user': data.id_user,
+        'nama': data.nama,
         'email':data.email,
-        'level':data.level
+        'usia':data.usia,
+        'jk':data.jk,
+        'tanggal':data.tanggal.strftime("%Y-%m-%d %H:%M:%S.%f")
     }
 
     return data
 
 def detail(id):
     try:
-        user = User.query.filter_by(id=id).first()
+        user = User.query.filter_by(id_user=id).first()
         if not user:
             response.badRequest([],"KOSONG")
         
         data = singleObject(user)
+        session["userData"] = data
         return response.succeed(data,"success")
     except Exception as e:
         print(e)
 
 
-def makeAdmin():
+
+def save():
     try:
         data = request.get_json()
-        name = data['name']
+        nama = data['nama']
         email = data['email']
-        password = data['password']
-        level = 1
+        jk = data['jk']
+        usia = data['usia']
 
-        user = User(name=name,email=email,level=level)
-        user.setPassword(password)
+        user = User(nama=nama,email=email,jk=jk,usia=usia,tanggal=datetime.now())
 
         db.session.add(user)
         db.session.commit()
-        return response.succeed(True,"BERHASIL MENAMBAH ADMIN")
-    except Exception as e:
-        print(e)
 
-
-def login():
-    try:
-        data = request.get_json()
-        email = data['email']
-        password = data['password']
-
-        user = User.query.filter_by(email=email).first()
-        if not user:
-            return response.badRequest(False,"Email tidak terdaftar")
-        if not user.checkPassword(password):
-            return response.badRequest(False,"Password salah")
-        
         data = singleObject(user)
-        expires = datetime.timedelta(days=3)
-        expires_refresh = datetime.timedelta(days=3)
-
-        access_token = create_access_token(data, fresh=True, expires_delta=expires)
-        refresh_token = create_refresh_token(data, expires_delta=expires_refresh)
-        
+        session["userData"] = data
         return response.succeed({
-            'data':data,
-            'access_token':access_token,
-            'refresh_token':refresh_token
-        },"BERHASIL LOGIN")
+            'id_user':user.id_user
+            },"BERHASIL MENAMBAH")
     except Exception as e:
         print(e)

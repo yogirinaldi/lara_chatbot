@@ -1,9 +1,9 @@
 import React from "react";
-import "../assets/vendor/bootstrap/css/bootstrap.min.css";
-import "../assets/css/main.css";
-import "../assets/css/variables.css";
+// import "../assets/vendor/bootstrap/css/bootstrap.min.css";
+// import "../assets/css/main.css";
+// import "../assets/css/variables.css";
 
-import "../assets/js/main.js";
+// import "../assets/js/main.js";
 
 const Header = () => {
   return (
@@ -22,7 +22,7 @@ const Header = () => {
         <nav id="navbar" className="navbar">
           <ul>
             <li>
-              <a className="nav-link scrollto" href="#about">
+              <a className="nav-link scrollto" href="#chat">
                 Chat
               </a>
             </li>

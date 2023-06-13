@@ -1,30 +1,32 @@
 import openai
 import pandas as pd
+from flask import session
 import numpy as np
 import tiktoken
 from datetime import date
-from app.tokenizer import tokenize, num_tokens_from_string
-from app.concat import concat
+from app.tokenizer import num_tokens_from_string
 import os
 from dotenv import load_dotenv
+
+from app.controller import QuestionController
+from app.model.question import Question
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-COMPLETIONS_MODEL = "text-davinci-003"
+COMPLETIONS_MODEL = "text-davinci-002"
 EMBEDDING_MODEL = "text-embedding-ada-002"
-conversation = []
 
+# conversation = []
+# userData = {}
 
+try:
+    df = pd.read_csv('data.csv', encoding="cp1252")
+    df = df.set_index(["title", "heading"])
+except:
+    df = pd.DataFrame()
 
-##Tokenize the dataset and create the new csv with new column "tokens"
-#tokenize_dataset('dataset.csv')
-
-
-##print(f"{len(df)} rows in the data.")
-
-
-
+#print(df)
 
 def get_embedding(text: str, model: str=EMBEDDING_MODEL) -> list[float]:
     result = openai.Embedding.create(
@@ -32,6 +34,9 @@ def get_embedding(text: str, model: str=EMBEDDING_MODEL) -> list[float]:
       input=text
     )
     return result["data"][0]["embedding"]
+
+
+# print(len(get_embedding("Apa itu hukum Perkawinan?")))
 
 # def compute_doc_embeddings(df: pd.DataFrame) -> dict[tuple[str, str], list[float]]:
 #     """
@@ -52,11 +57,12 @@ def compute_doc_embeddings(df: pd.DataFrame) -> dict[tuple[str, str], list[float
     data = []
     df = df.reset_index()
     for idx, r in df.iterrows():
-        embedding = get_embedding(r.content)
-        row = [r.title, r.heading] + embedding
+
+        embedding = get_embedding(f"{r.heading} - {r.content}")
+        row = [r.id_data, r.title, r.heading] + embedding
         data.append(row)
         
-    return pd.DataFrame(data, columns=["title", "heading"] + [f"{i}" for i in range(len(embedding))])
+    return pd.DataFrame(data, columns=["id_data","title", "heading"] + [f"{i}" for i in range(len(embedding))])
 
 
 
@@ -71,25 +77,18 @@ def load_embeddings(fname: str) -> dict[tuple[str, str], list[float]]:
     """
     
     df = pd.read_csv(fname, header=0)
-    max_dim = max([int(c) for c in df.columns if c != "title" and c != "heading"])
+    max_dim = max([int(c) for c in df.columns if c != "id_data" and c != "title" and c != "heading"])
     return {
            (r.title, r.heading): [r[str(i)] for i in range(max_dim + 1)] for _, r in df.iterrows()
     }
 
 
 
-update = False
-if update:
-        concat()
-        tokenize()
-        df = pd.read_csv('dataset_tokens.csv',encoding='cp1252')
-        df = df.set_index(["title", "heading"])
-        new_df = compute_doc_embeddings(df)
-        new_df.to_csv('dataset_tokens_embeddings.csv', index=False)
+if not df.empty:
+    document_embeddings = load_embeddings("data_embedding.csv")
 else:
-    df = pd.read_csv('dataset_tokens.csv',encoding='cp1252')
-    df = df.set_index(["title", "heading"])
-    document_embeddings = load_embeddings("dataset_tokens_embeddings.csv")
+    document_embeddings = {}
+
 
 ##===== OR, uncomment the below line to recalculate the embeddings from scratch. after that comment again========
 
@@ -126,8 +125,8 @@ def order_document_sections_by_query_similarity(query: str, contexts: dict[(str,
     
     return document_similarities
 
-# query1 = get_embedding("saya suka pantai")
-# query2 = get_embedding(" ")
+# query1 = get_embedding("Apa itu perkawinan")
+# query2 = get_embedding("Perkawinan ialah ikatan lahir bathin antara seorang pria dengan seorang wanita sebagai suami isteri dengan tujuan membentuk keluarga (rumah tangga) yang bahagia dan kekal berdasarkan Ketuhanan Yang Mahaesa.")
 
 # dot_product = vector_similarity(query1,query2)
 
@@ -138,7 +137,12 @@ def order_document_sections_by_query_similarity(query: str, contexts: dict[(str,
 
 # print(dot_product, similarity)
 
-#print(order_document_sections_by_query_similarity(" kucing", document_embeddings)[:5])
+# pv = ""
+# dv = ""
+
+# np.dot(pv,dv) / (np.linalg.norm(pv) * np.linalg.norm(dv))
+
+#print(order_document_sections_by_query_similarity("perkawinan", document_embeddings)[:5])
 
 MAX_SECTION_LEN = 750
 SEPARATOR = "\n* "
@@ -183,10 +187,10 @@ def construct_prompt(question: str, context_embeddings: dict, df: pd.DataFrame) 
     chosen_sections_len = 0
     chosen_sections_indexes = []
     
-    
     for _, section_index in most_relevant_document_sections:
         # Add contexts until we run out of space. 
-        document_section = df.loc[section_index].iloc[0]
+        #document_section = df.loc[section_index].iloc[0]
+        document_section = df.xs(section_index, level=[0,1]).iloc[0]
         
         chosen_sections_len += document_section.tokens + separator_len
         if chosen_sections_len > MAX_SECTION_LEN:
@@ -204,34 +208,46 @@ def construct_prompt(question: str, context_embeddings: dict, df: pd.DataFrame) 
     
     #Jawab pertanyaan secara jujur hanya dengan menggunakan konteks yang disediakan, dan jika jawabannya tidak terdapat dalam teks atau konteks di bawah , katakan "Maaf, Saya tidak mengetahui terkait informasi tersebut.".
 
-    header = """Anda adalah konsultan hukum yang ramah, sangat membantu, sopan dan memberikan solusi. Tanggal hari ini adalah """ + formatted_date +""".
+    header = """Anda adalah LARA, sebuah chatbot konsultan hukum. Tanggal hari ini adalah """ + formatted_date +""". Nama pengguna adalah """+ str(session['userData']['nama']) + """, email adalah """ + str(session['userData']['email']) + """, usia adalah """ + str(session['userData']['usia']) + """ dan seorang """ + str(session['userData']['jk']) + """.
     Patuhi instruksi dibawah ini:
     1. tanyakan kembali rincian masalah jika belum mengerti.
     2. hanya menjawab pertanyaan menggunakan informasi yang diberikan. jika di luar Konteks, katakan bahwa informasi tersebut belum tersedia.
-    3. berpikirlah langkah demi langkah untuk memberikan solusi.
-    4. berikan jawaban dengan cara yang jelas dan mudah dimengerti oleh pengguna yang tidak ahli dalam bidang hukum.
-    5. hindari penggunaan bahasa hukum yang terlalu teknis atau rumit dan gunakan istilah yang lebih mudah dipahami oleh orang awam.
-    6. gunakan kalimat yang singkat dan jelas, serta hindari pengulangan atau redundansi yang tidak perlu.
+    3. berikan jawaban dengan cara yang jelas dan mudah dimengerti oleh pengguna yang tidak ahli dalam bidang hukum.
 
     Konteks:
     """
-    prompt = ""
-    if len(conversation) == 0:
-        prompt = header + "".join(chosen_sections) + "\n\nQ:" + question + "\nA:"
-    else:
-        new_conversation = cut_conversation(conversation, question, 4097 - num_tokens_from_string(header + "".join(chosen_sections) + "\n\n",COMPLETIONS_MODEL))
-        questions = ""
-        for i in new_conversation:
-            questions+= "Q:"+i["Q"] + "\nA:"+i["A"]+ "\n"
+    #print(session['userData'])
+    data = Question.query.filter_by(id_user=session['userData']['id_user']).all()
+    raw_conversation = QuestionController.formatArray(data)
+    #print(raw_conversation)
+    raw_conversation.reverse()
+    #print(raw_conversation)
+    conversation = []
 
-        questions+="Q:"+question+ "\nA:"
 
-        prompt = header + "".join(chosen_sections) + "\n\n" + questions
+    prompt_size = num_tokens_from_string(header + "\n\n",COMPLETIONS_MODEL) + MAX_SECTION_LEN
+
+    for i in raw_conversation:
+        prompt_size += num_tokens_from_string(i['pertanyaan'] + i['jawaban'],COMPLETIONS_MODEL)
+        if(prompt_size >= 2500):
+            break
+        else:
+            conversation.append(i)
+
+    #print(conversation)
+    conversation.reverse()
+    #print(conversation)
+
+    questions = ""
+    for i in conversation:
+        questions += "Q:"+i["pertanyaan"] + "\nA:"+i["jawaban"]+ "\n"
+
+    questions += "Q:"+question+ "\nA:"
+
+    prompt = header + "".join(chosen_sections) + "\n\n" + questions
 
     return prompt
 
-
-def cut_conversation(conversation, new_question, max_size):
     questions = ""
     for i in conversation:
         questions += "Q:" + i["Q"] + "\nA:" + i["A"] + "\n"
@@ -247,6 +263,7 @@ def cut_conversation(conversation, new_question, max_size):
         prompt_size = num_tokens_from_string(questions, COMPLETIONS_MODEL) + 500
 
     return conversation
+
 # prompt = construct_prompt(
 #     "bolehkah memiliki 2 istri",
 #     document_embeddings,
@@ -297,8 +314,6 @@ def answer_query_with_context(
                 **COMPLETIONS_API_PARAMS
             )
     
-    
-
     return response["choices"][0]["text"].strip(" \n")
     #return response["usage"]
 

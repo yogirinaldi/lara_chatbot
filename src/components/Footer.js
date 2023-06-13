@@ -1,16 +1,16 @@
 import React from "react";
-import "../assets/vendor/bootstrap/css/bootstrap.min.css";
-import "../assets/css/main.css";
-import "../assets/css/variables.css";
-import "../assets/vendor/bootstrap-icons/bootstrap-icons.css";
-import "../assets/js/main.js";
+// import "../assets/vendor/bootstrap/css/bootstrap.min.css";
+// import "../assets/css/main.css";
+// import "../assets/css/variables.css";
+// import "../assets/vendor/bootstrap-icons/bootstrap-icons.css";
+// import "../assets/js/main.js";
 
 const Footer = () => {
   return (
     <footer id="footer" className="footer">
       <div className="footer-legal text-center">
-        <div className="container d-flex flex-column flex-lg-row justify-content-center justify-content-lg-between align-items-center">
-          <div className="d-flex flex-column align-items-center align-items-lg-start">
+        <div className="container d-flex flex-column flex-lg-row justify-content-center align-items-center">
+          <div className="d-flex flex-column align-items-center">
             <div className="copyright">
               2023 © Copyright{" "}
               <strong>
@@ -26,7 +26,7 @@ const Footer = () => {
               Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
             </div>
           </div>
-          <div className="social-links order-first order-lg-last mb-3 mb-lg-0">
+          {/* <div className="social-links order-first order-lg-last mb-3 mb-lg-0">
             <a href="#" className="twitter">
               <i className="bi bi-twitter" />
             </a>
@@ -42,7 +42,7 @@ const Footer = () => {
             <a href="#" className="linkedin">
               <i className="bi bi-linkedin" />
             </a>
-          </div>
+          </div> */}
         </div>
       </div>
     </footer>
